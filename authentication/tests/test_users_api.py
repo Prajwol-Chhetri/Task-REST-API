@@ -1,3 +1,4 @@
+from os import access
 from django.test import TestCase
 from django.contrib.auth import get_user_model, login
 from django.urls import reverse
@@ -9,6 +10,7 @@ from rest_framework import status
 REGISTER_USER_URL = reverse('auth:register')
 LOGIN_URL = reverse('auth:token_obtain_pair')
 REFRESH_URL = reverse('auth:token_refresh')
+UPDATE_URL = reverse('auth:update')
 
 def register_user(**params):
     return get_user_model().objects.create_user(**params)
@@ -120,3 +122,18 @@ class PrivateUserApiTests(TestCase):
         self.assertNotIn('refresh', refresh_res.data)
         self.assertIn('access', refresh_res.data)
         self.assertEqual(refresh_res.status_code, status.HTTP_200_OK)
+
+    def test_update_user_profile(self):
+        """Test Updating the user profile for authenticated user"""
+        payload = {'email': 'test@testing.com', 'password': 'testpass'}
+        res = self.client.post(LOGIN_URL, payload)
+        access_token = 'Bearer '+res.data['access']
+
+        updated_payload = {'first_name': 'Changed', 'password': 'newpassword123'}
+        header = {'Authorization': access_token}
+        update_res = self.client.patch(UPDATE_URL, updated_payload, **header)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, updated_payload['first_name'])
+        self.assertTrue(self.user.check_password(updated_payload['password']))
+        self.assertEqual(update_res.status_code, status.HTTP_200_OK)

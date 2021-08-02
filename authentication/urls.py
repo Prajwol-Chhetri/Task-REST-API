@@ -9,6 +9,7 @@ from authentication import views
 app_name = 'auth'
 urlpatterns = [
     path('register/', views.RegisterUserView.as_view(), name='register'),
+    path('update/', views.UpdateUserView.as_view(), name='update'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
