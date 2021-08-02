@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.conf import settings
 # base classes required to overwrite default django user models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
@@ -59,3 +59,33 @@ class User(AbstractBaseUser, PermissionsMixin):
     def ___str__(self):
         """Return string representation of our user"""
         return self.email
+
+
+class Task(models.Model):
+    """Task object"""
+    assigned = 'A'
+    pending = 'P'
+    completed = 'C'
+    declined = 'D'
+    TASK_CHOICES = [
+        (assigned, 'Assigned'),
+        (pending, 'Pending'),
+        (completed, 'Completed'),
+        (declined, 'Declined') ,
+    ]
+
+    task_id = models.IntegerField(primary_key=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    task_status = models.CharField(
+        max_length=1,
+        choices=TASK_CHOICES,
+        default=assigned,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+
+    def __str__(self):
+        return self.title
