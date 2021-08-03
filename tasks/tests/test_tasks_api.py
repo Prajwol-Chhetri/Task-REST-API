@@ -17,6 +17,11 @@ def register_user(**params):
     return get_user_model().objects.create_user(**params)
 
 
+def detail_url(task_id):
+    """Return task detail URL"""
+    return reverse('task:task-detail', args=[task_id])
+
+
 def sample_task(user, **params):
     """Create and return a sample task"""
     defaults = {
@@ -99,10 +104,30 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data, serializer.data)
 
+    def test_retrieve_all_task_to_superuser(self):
+        "Test checking all tasks are retrieved to super user"
+        self.client = APIClient()
+        self.admin_user = get_user_model().objects.create_superuser(
+            'admin@testing.com',
+            'password123',
+            'admin',
+            'user'
+        )
+        self.client.force_authenticate(self.admin_user)
+
+        # creating a task by sample user 
+        sample_task(user=self.user)
+        
+        res = self.client.get(TASK_URL)
+        admin_id = self.admin_user.id
+        self.assertNotIn(admin_id, res.data)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+
     def test_create_task(self):
         """Test creating task"""
         payload = {
-            'task_id':'2',
+            'task_id': 2,
             'title':'Create another Django Rest API',
             'description':'Django API for the server',
             'task_status':'A'
@@ -110,43 +135,40 @@ class PrivateRecipeApiTests(TestCase):
         res = self.client.post(TASK_URL, payload)
         
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        task = Task.objects.get(id=res.data['task_id'])
+        task = Task.objects.get(task_id=res.data['task_id'])
         for key in payload.keys():
             self.assertEqual(payload[key], getattr(task, key))
 
+    def test_partial_update_tasks(self):
+        """Test updating a task with patch"""
+        task = sample_task(user=self.user)
+        payload = {
+            'task_id':'1',
+            'title':'Updating Sample task',
+            'description':'Django API for the user',
+            'task_status':'A',
+        }
 
-    # def test_partial_update_recipe(self):
-    #     """Test updating a recipe with patch"""
-    #     recipe = sample_recipe(user=self.user)
-    #     recipe.tags.add(sample_tag(user=self.user))
-    #     new_tag = sample_tag(user=self.user, name='Curry')
+        url = detail_url(task.task_id)
+        self.client.patch(url, payload)
 
-    #     payload = {'title': 'Chicken tikka', 'tags': [new_tag.id]}
-    #     url = detail_url(recipe.id)
-    #     self.client.patch(url, payload)
+        task.refresh_from_db()
+        self.assertEqual(task.title, payload['title'])
 
-    #     recipe.refresh_from_db()
-    #     self.assertEqual(recipe.title, payload['title'])
-    #     tags = recipe.tags.all()
-    #     self.assertEqual(len(tags), 1)
-    #     self.assertIn(new_tag, tags)
+    def test_full_update_task(self):
+        """Test updating a task with put"""
+        task = sample_task(user=self.user)
+        payload = {
+            'task_id':'1',
+            'title':'Updating Sample task',
+            'description':'Hello World',
+            'task_status':'C',
+        }
 
-    # def test_full_update_recipe(self):
-    #     """Test updating a recipe with put"""
-    #     recipe = sample_recipe(user=self.user)
-    #     recipe.tags.add(sample_tag(user=self.user))
+        url = detail_url(task.task_id)
+        self.client.put(url, payload)
 
-    #     payload = {
-    #             'title': 'Spaghetti carbonara',
-    #             'time_minutes': 25,
-    #             'price': 5.00
-    #         }
-    #     url = detail_url(recipe.id)
-    #     self.client.put(url, payload)
-
-    #     recipe.refresh_from_db()
-    #     self.assertEqual(recipe.title, payload['title'])
-    #     self.assertEqual(recipe.time_minutes, payload['time_minutes'])
-    #     self.assertEqual(recipe.price, payload['price'])
-    #     tags = recipe.tags.all()
-    #     self.assertEqual(len(tags), 0)
+        task.refresh_from_db()
+        self.assertEqual(task.title, payload['title'])
+        self.assertEqual(task.description, payload['description'])
+        self.assertEqual(task.task_status, payload['task_status'])
