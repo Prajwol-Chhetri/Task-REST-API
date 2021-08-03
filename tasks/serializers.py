@@ -20,5 +20,3 @@ class TaskSerializer(serializers.ModelSerializer):
         """Update Task"""
         task = super().update(instance, validated_data)
         return task
-
-

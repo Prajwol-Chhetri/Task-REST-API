@@ -79,6 +79,16 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
+    def test_view_task_detail(self):
+        """Test viewing a task detail"""
+        task = sample_task(user=self.user)
+
+        url = detail_url(task.task_id)
+        res = self.client.get(url)
+
+        serializer = TaskSerializer(task)
+        self.assertEqual(res.data, serializer.data)
+
     def test_tasks_limited_to_user(self):
         """Test retrieving tasks for user"""
         user2 = get_user_model().objects.create_user(
