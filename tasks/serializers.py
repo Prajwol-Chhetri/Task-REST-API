@@ -20,3 +20,21 @@ class TaskSerializer(serializers.ModelSerializer):
         """Update Task"""
         task = super().update(instance, validated_data)
         return task
+
+
+class AdminTaskSerializer(serializers.ModelSerializer):
+    """Serialize a Task by admin"""
+    class Meta:
+        model = Task
+        fields = [
+            'task_id', 'title', 'description', 'task_status', 'user'
+        ]
+
+    def create(self, validated_data):
+        """Create a new task and return it"""
+        return Task.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        """Update Task"""
+        task = super().update(instance, validated_data)
+        return task

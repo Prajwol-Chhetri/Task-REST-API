@@ -182,3 +182,50 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(task.title, payload['title'])
         self.assertEqual(task.description, payload['description'])
         self.assertEqual(task.task_status, payload['task_status'])
+
+    def test_admin_assign_task_to_other(self):
+        """Test creating task by admin to others"""
+        self.client = APIClient()
+        self.admin_user = get_user_model().objects.create_superuser(
+            'admin@testing.com',
+            'password123',
+            'admin',
+            'user'
+        )
+        self.client.force_authenticate(self.admin_user)
+
+        payload = {
+            'task_id':'1',
+            'title':'Updating Sample task',
+            'description':'Hello World',
+            'task_status':'C',
+            'user': self.user.id
+        }
+
+        res = self.client.post(TASK_URL, payload)
+        user_id = self.user.id
+        admin_id = self.admin_user.id
+        self.assertNotEqual(admin_id, (res.data['user']))
+        self.assertEqual(user_id, (res.data['user']))
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+    def test_user_assign_task_to_other(self):
+        """Test creating task by other to others fails"""
+        user2 = get_user_model().objects.create_user(
+            'other@testing.com',
+            'password123',
+            'other',
+            'user'
+        )
+        payload = {
+            'task_id':'2',
+            'title':'Create another Django Rest API',
+            'description':'Django API for the server',
+            'task_status':'A',
+            'user': user2.id
+        }
+
+        res = self.client.post(TASK_URL, payload)
+        to_be_assigned_user_id = user2.id
+        self.assertNotEqual(to_be_assigned_user_id, (res.data['user']))
+

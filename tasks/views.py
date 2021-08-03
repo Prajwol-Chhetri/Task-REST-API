@@ -11,9 +11,12 @@ from tasks import serializers
 class TaskViewSet(viewsets.ModelViewSet):
     """Manage tasks in the database"""
     queryset = Task.objects.all()
-    serializer_class = serializers.TaskSerializer
-    # authentication_classes = (JWTAuthentication, )
     permission_classes = (IsAuthenticated,)
+
+    def get_serializer_class(self):
+        if self.request.user.is_superuser:
+            return serializers.AdminTaskSerializer
+        return serializers.TaskSerializer
 
     def get_queryset(self):
         """Retrieve the tasks for the authenticated user"""
@@ -23,10 +26,19 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create a new task"""
-        serializer.save(user=self.request.user)
+        if self.request.user.is_superuser:
+            serializer.save()
+        else:
+            serializer.save(user=self.request.user)
     
     def perform_update(self, serializer):
         """Update a existing task"""
-        serializer.save(user=self.request.user)
+        if self.request.user.is_superuser:
+            serializer.save()
+        else:
+            serializer.save(user=self.request.user)
+
+
+
 
 
