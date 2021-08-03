@@ -62,5 +62,4 @@ class ModelTests(TestCase):
             task_status='A',
             user=sample_user(),
         )
-
         self.assertEqual(str(task), task.title)

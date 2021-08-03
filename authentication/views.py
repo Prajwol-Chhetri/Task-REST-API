@@ -1,7 +1,8 @@
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
-from authentication.serializers import UserSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+from authentication.serializers import UserSerializer
 
 
 class RegisterUserView(generics.CreateAPIView):
