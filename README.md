@@ -1,2 +1,2 @@
 # Task-REST-API
-Eat Ziffy Internship Task
+API with Custom User Models, Authentication using JWT Token and Endpoints created using Django REST Framework. The authenticated user can create tasks and view tasks assigned to him/her and task created by user is assigned to himself. The admin can create tasks and assign the tasks to other users as well. The admin can also get a list of all tasks and check the assigned user for each task. 
